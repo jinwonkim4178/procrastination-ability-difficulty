@@ -8,7 +8,7 @@ library(tidyverse)
 ## NOTE: We merge enrollment records with LMS data using the university's data warehouse (Step 1)
 lms_enroll_df <- read_csv("./data/lms_enroll_dataset.csv")
 student_info <-
-  c("mellon_id", "birth_year", "birth_month", "female", "urm", 
+  c("student_id", "birth_year", "birth_month", "female", "urm", 
     "major_name_1", "major_name_2", "major_name_3", "major_name_4", "major_minor")
 course_info <-
   c("course_id", "course_code", "term_code", "term_desc")
