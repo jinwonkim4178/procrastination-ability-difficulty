@@ -1,8 +1,8 @@
-<h1 align="left">Course Difficulty and Ability Moderate the Impact of Procrastination on Grades </h1>
+<h1 align="left">Course Difficulty and Student Ability Moderate the Relationship Between Procrastination and Grades </h1>
 <h2>Introduction</h2>
 <p>
 This repository provides the preprocessing (preprocessing.R) and analysis (analysis.R) procedures for the paper 
-<i>"Course Difficulty and Ability Moderate the Impact of Procrastination on Grades"</i>. 
+<i>"Course Difficulty and Student Ability Moderate the Relationship Between Procrastination and Grades"</i>. 
 </p>
 
 <h2>Data Preprocessing</h2>
