@@ -1,9 +1,37 @@
-<h1 align="left">Course Difficulty and Student Ability Moderate the Relationship Between Procrastination and Grades </h1>
+<h1 align="left">Course Difficulty and Academic Performance Moderate the Relationship Between Procrastination and Grades</h1>
+
 <h2>Introduction</h2>
+
 <p>
-This repository provides the preprocessing (preprocessing.R) and analysis (analysis.R) procedures for the paper 
-<i>"Course Difficulty and Student Ability Moderate the Relationship Between Procrastination and Grades"</i>. 
+This repository provides the data preprocessing and analysis code for the paper 
+<i>"Course Difficulty and Academic Performance Moderate the Relationship Between Procrastination and Grades."</i>
+The repository documents the construction of the analytic sample, IRT-based estimation of course difficulty and academic performance propensity, primary hierarchical linear model analyses, interaction analyses, model diagnostics, descriptive analyses, and robustness and sensitivity checks.
 </p>
+
+
+<h2>Repository Structure</h2>
+
+<ul>
+  <li>
+    <b><code>preprocessing.R</code></b>: 
+    Data preprocessing, sample construction, and IRT-based estimation of course difficulty and academic performance propensity.
+  </li>
+
+  <li>
+    <b><code>main_analysis.R</code></b>: 
+    Primary model estimation, cluster-robust inference, model diagnostics, interaction analyses, descriptive analyses, and additional robustness checks.
+  </li>
+
+  <li>
+    <b><code>robustness_diff_operationalization.R</code></b>: 
+    Robustness checks using alternative operationalizations of procrastination and submission timing.
+  </li>
+
+  <li>
+    <b><code>robustness_irt_diff_cutoffs_prior_semesters.R</code></b>: 
+    Robustness checks using alternative IRT grade cutoffs and prior-semester calibration.
+  </li>
+</ul>
 
 <h2>Data Preprocessing</h2>
 <p>The preprocessing pipeline includes:</p>
@@ -28,37 +56,76 @@ whose replication code is publicly available on
 </p>
 
 <h2>Data Analysis</h2>
-<p>The analysis builds on the final dataset and proceeds in the following steps:</p>
+<p>
+The analysis builds on the final analytic dataset and includes the following procedures:
+</p>
 <ul>
-  <li><b>Standardization</b><br>
-      All three explanatory variables (procrastination index, course difficulty, and student ability) were standardized to have mean 0 and standard deviation 1.
+  <li>
+    <b>Standardization</b><br>
+    Course grade, procrastination index, course difficulty, and academic performance propensity were standardized to have mean 0 and standard deviation 1 for the primary model analyses.
   </li>
-
   <li><b>Hierarchical Linear Models (HLMs)</b><br>
-      Six nested models were estimated using <code>lmer</code>:
+      Seven nested models were estimated using <code>lmer</code>:
       <ol>
         <li>Course grade ~ Procrastination + (1 | Student)</li>
         <li>Course grade ~ Procrastination + Course difficulty + (1 | Student)</li>
-        <li>Course grade ~ Procrastination + Course difficulty + Student ability + (1 | Student)</li>
-        <li>Course grade ~ Procrastination × Course difficulty + Student ability + (1 | Student)</li>
-        <li>Course grade ~ Procrastination × (Course difficulty + Student ability) + (1 | Student)</li>
-        <li>Course grade ~ Procrastination × Course difficulty × Student ability + (1 | Student)</li>
+        <li>Course grade ~ Procrastination + Course difficulty + Academic Performance Propensity + (1 | Student)</li>
+        <li>Course grade ~ Procrastination × Course difficulty + Academic Performance Propensity + (1 | Student)</li>
+        <li>Course grade ~ Procrastination × (Course difficulty + Academic Performance Propensity) + (1 | Student)</li>
+        <li>Course grade ~ Procrastination × (Course difficulty + Academic Performance Propensity) + difficulty × Academic Performance Propensity + (1 | Student)</li>
+        <li>Course grade ~ Procrastination × Course difficulty × Academic Performance Propensity + (1 | Student)</li>
       </ol>
   </li>
 
-  <li><b>Model diagnostics</b><br>
-      Residual diagnostics were performed, including Q–Q plots, residuals vs. fitted plots, scale–location plots, and leverage/outlier checks.
+ <li>
+    <b>Cluster-robust inference</b><br>
+    Cluster-robust variance estimators (CR2) were used for statistical inference in the primary models.
   </li>
 
-  <li><b>Calculating Robust standard errors</b><br>
-      All reported results were based on robust standard errors (cluster-robust variance estimators).
+  <li>
+    <b>Model comparison</b><br>
+    Nested models were compared using likelihood ratio tests.
   </li>
 
-  <li><b>Model comparison</b><br>
-      AIC, BIC, and Likelihood ratio tests (<code>anova</code>) were used to compare nested models.
+  <li>
+    <b>Model diagnostics</b><br>
+    Standard residual and influence diagnostics were conducted to evaluate distributional and modeling assumptions.
   </li>
 
-  <li><b>Three-way interaction plot</b><br>
-      Visualization of the interaction between procrastination, student ability, and course difficulty on course grades. 
+  <li>
+    <b>Interaction analyses</b><br>
+    Two-way and three-way interaction effects were examined using predicted course grades, visualization, and formal simple-slope analyses.
   </li>
+
+  <li>
+    <b>Descriptive analyses</b><br>
+    Descriptive characteristics of the analytic sample and comparisons between retained and excluded observations were examined.
+  </li>
+
+  <li>
+    <b>Robustness and sensitivity analyses</b><br>
+    The robustness of the findings was assessed using alternative outcome models, random- and fixed-effect specifications, disciplinary subgroup analyses, demographic adjustments, alternative IRT calibrations, sample restrictions, and alternative operationalizations of procrastination.
+  </li>
+
+</ul>
+
+
+<h2>Robustness Analysis Files</h2>
+
+<p>
+Additional robustness analyses are organized into two separate scripts:
+</p>
+
+<ul>
+
+  <li>
+    <b><code>robustness_diff_operationalization.R</code></b><br>
+    Examines alternative submission-delay measures, the exclusion of non-submissions, and sensitivity to extreme submission-delay values.
+  </li>
+
+  <li>
+    <b><code>robustness_irt_diff_cutoffs_prior_semesters.R</code></b><br>
+    Examines alternative grade cutoffs for IRT estimation and the estimation of course difficulty and academic performance propensity using prior-semester grade information.
+  </li>
+
 </ul>
