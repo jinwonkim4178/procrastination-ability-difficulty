@@ -104,7 +104,7 @@ The analysis builds on the final analytic dataset and includes the following pro
 
   <li>
     <b>Robustness and sensitivity analyses</b><br>
-    The robustness of the findings was assessed using alternative outcome models, random- and fixed-effect specifications, disciplinary subgroup analyses, demographic adjustments, alternative IRT calibrations, sample restrictions, and alternative operationalizations of procrastination.
+    The robustness of the findings was assessed using alternative outcome models, random- and fixed-effect specifications, disciplinary subgroup analyses, demographic adjustments, alternative IRT calibrations, and alternative operationalizations of procrastination.
   </li>
 
 </ul>
