@@ -123,7 +123,7 @@ anova(model1, model2, model3, model4, model5, model6, model7)
 
 ################################################################################################################
 # ==============================================================================================================
-# Checking distributional and modeling assumptions via visual inspection of standard diagnostic plots (Table A1)
+# Checking distributional and modeling assumptions via visual inspection of standard diagnostic plots (Figure A1)
 # Diagnostic checks were conducted prior to reporting results with cluster-robust standard errors
 # ==============================================================================================================
 ################################################################################################################
@@ -180,6 +180,7 @@ theme_diag <- theme_classic(
       l = 10
     )
   )
+
 
 # ============================================================
 # 3. Panel A: Normal Q-Q Plot
@@ -1175,7 +1176,7 @@ coef_test(model7_major, vcov=vcov7_major)
 
 ###########################################################################
 # =========================================================================
-# Robustness Check (Table A12): Three-Way Interaction by Disciplinary Field
+# Robustness Check (Table A13): Three-Way Interaction by Disciplinary Field
 # =========================================================================
 ###########################################################################
 
@@ -1281,7 +1282,7 @@ print(threeway_by_field)
 
 ##########################################################################
 # ========================================================================
-# Robustness Check (Table A13): Adding demographics (female_cat / urm_cat)
+# Robustness Check (Table A12): Adding demographics (female_cat / urm_cat)
 # ========================================================================
 ##########################################################################
 
@@ -1361,6 +1362,9 @@ full_sample_with_grades <- read_csv('./cleaned_data/full_dataset_with_course_gra
 # Institutional STEM classification obtained from the university's data warehouse
 stem_lookup <- read_csv('./cleaned_data/institutional_stem_cate.csv') 
 
+# Majar category based on the university's department information
+major_category_lookup <- read_csv('./cleaned_data/major_cate.csv')
+
 full_sample_with_grades <- 
   full_sample_with_grades %>% 
   mutate(
@@ -1410,9 +1414,10 @@ comparison <- full_sample_with_grades %>%
     sample_status = factor(sample_status, levels = c("Retained","Excluded"))
   )
 
-# Add Primary-Major STEM Classification
+# Add Primary-Major STEM Classification & Major Category
 comparison <- comparison %>% 
   left_join(stem_lookup, by = "major1") %>%
+  left_join(major_category_lookup, by = "major1") %>% 
   mutate(stem_status = factor(major_stem,levels = c(0, 1), labels = c("Non-STEM", "STEM")))
 
 
@@ -1609,27 +1614,147 @@ v_stem <- cramers_v_manual(
 
 print(v_stem)
 
+
+
+# ------------------------------------------------------------
+# A1-6. Course Enrollment Size
+# Unique course-offering level
+# ------------------------------------------------------------
+
+# A retained course offering is defined as a course offering
+# with at least one student-course observation included in the
+# final analytic sample.
+#
+# An excluded course offering is defined as a course offering
+# that appears in the comparison sample but has no student-course
+# observations included in the final analytic sample.
+#
+# Enrollment size is calculated using original enrollment
+# records prior to analytic sample restrictions. For courses
+# corresponding to multiple administrative sections, section-level
+# enrollment counts are averaged to obtain one course-level
+# enrollment-size measure.
+
+course_enrollment <- read_csv('./cleaned_data/course_enrollment_data.csv')
+
+# ------------------------------------------------------------
+# Define retained/excluded status for each course
+# ------------------------------------------------------------
+
+course_status <- comparison %>%
+  group_by(course_id) %>%
+  summarise(
+    retained_anywhere = any(sample_status == "Retained"),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    sample_status = if_else(
+      retained_anywhere,
+      "Retained",
+      "Excluded"
+    ),
+    sample_status = factor(
+      sample_status,
+      levels = c("Retained", "Excluded")
+    )
+  ) %>%
+  select(
+    course_id,
+    sample_status
+  )
+
+
+# ------------------------------------------------------------
+# Combine course status with enrollment size
+# ------------------------------------------------------------
+
+course_demo <- course_status %>%
+  left_join(
+    course_enrollment,
+    by = "course_id"
+  )
+
+# ------------------------------------------------------------
+# Descriptive statistics for course enrollment size
+# Course level
+# ------------------------------------------------------------
+
+course_enrollment_desc <- course_demo %>%
+  group_by(sample_status) %>%
+  summarise(
+    course_n = sum(!is.na(enrollment_size)),
+    enrollment_mean = sprintf(
+      "%.3f",
+      mean(enrollment_size, na.rm = TRUE)
+    ),
+    enrollment_sd = sprintf(
+      "%.3f",
+      sd(enrollment_size, na.rm = TRUE)
+    ),
+    enrollment_median = sprintf(
+      "%.3f",
+      median(enrollment_size, na.rm = TRUE)
+    ),
+    .groups = "drop"
+  )
+
+print(course_enrollment_desc)
+
+
+# ------------------------------------------------------------
+# Cohen's d for course enrollment size
+# Retained - Excluded
+# ------------------------------------------------------------
+
+d_enrollment <- cohens_d_manual(
+  course_demo,
+  enrollment_size
+)
+
+print(d_enrollment)
+
+
+
 # ============================================================
-# Table A2. Distribution of Primary Majors Among Retained
+# Table A2. Distribution of Major Categories Among Retained
 # and Excluded Student-Course Observations
 # ============================================================
 
-# PRIMARY MAJOR
+# MAJOR CATEGORY
 # Student-course level
 
 # ------------------------------------------------------------
-# A2-1. Primary-Major Distribution
+# A2-1. Major-Category Distribution
 # Student-course observation level
 # ------------------------------------------------------------
 
-major_desc <- comparison %>%
+category_order <- c(
+  "Arts",
+  "Humanities",
+  "Biological Sciences",
+  "Physical Sciences",
+  "Engineering",
+  "Computing & Information Sciences",
+  "Health Sciences",
+  "Social Sciences & Business",
+  "Education"
+)
+
+major_category_desc <- comparison %>%
   filter(
-    !is.na(major1)
+    !is.na(major_category)
+  ) %>%
+  mutate(
+    major_category = factor(
+      major_category,
+      levels = category_order
+    )
   ) %>%
   count(
     sample_status,
-    major1,
-    name = "n"
+    major_category,
+    name = "n",
+    .drop = FALSE
   ) %>%
   group_by(sample_status) %>%
   mutate(
@@ -1637,39 +1762,30 @@ major_desc <- comparison %>%
   ) %>%
   ungroup()
 
-print(major_desc)
+print(major_category_desc)
 
 # ------------------------------------------------------------
-# A2-2. Create Appendix Primary-Major Table
+# A2-2. Create Appendix Major-Category Table
 # ------------------------------------------------------------
-# Include every primary major in both columns.
-# Majors not represented in one sample are assigned n = 0 and 0.0%.
+# Include every major category in both columns.
+# Categories not represented in one sample are assigned
+# n = 0 and 0.0%.
 
-major_table <- major_desc %>%
-  complete(
-    major1,
-    sample_status,
-    fill = list(
-      n = 0,
-      percent = 0
-    )
-  ) %>%
+major_category_table <- major_category_desc %>%
   mutate(
-    value = paste0(format(
+    value = paste0(
+      format(
         n,
         big.mark = ",",
         scientific = FALSE
       ),
       " (",
-      sprintf(
-        "%.1f",
-        percent
-      ),
+      sprintf("%.1f", percent),
       "%)"
     )
   ) %>%
   select(
-    major1,
+    major_category,
     sample_status,
     value
   ) %>%
@@ -1677,14 +1793,15 @@ major_table <- major_desc %>%
     names_from = sample_status,
     values_from = value
   ) %>%
-  arrange(major1)
+  arrange(major_category)
 
-print(major_table)
+print(major_category_table)
 
 # ------------------------------------------------------------
 # A2-3. Add Total Student-Course Observations
 # ------------------------------------------------------------
-major_totals <- comparison %>%
+
+major_category_totals <- comparison %>%
   count(
     sample_status,
     name = "n"
@@ -1708,39 +1825,44 @@ major_totals <- comparison %>%
     values_from = value
   ) %>%
   mutate(
-    major1 = "Total student-course observations"
+    major_category = "Total student-course observations"
   ) %>%
   select(
-    major1,
+    major_category,
     Retained,
     Excluded
   )
 
-major_table_with_total <- bind_rows(
-  major_table,
-  major_totals
+major_category_table_with_total <- bind_rows(
+  major_category_table %>%
+    mutate(
+      major_category = as.character(major_category)
+    ),
+  major_category_totals
 )
 
+print(major_category_table_with_total)
+
 
 # ------------------------------------------------------------
-# A2-4. Overall Effect Size for Primary-Major Composition
+# A2-4. Overall Effect Size for Major-Category Composition
 # ------------------------------------------------------------
-major_effect_data <- comparison %>%
+major_category_effect_data <- comparison %>%
   filter(
-    !is.na(major1)
+    !is.na(major_category)
   )
 
-v_major <- cramers_v_manual(
-  major_effect_data$sample_status,
-  major_effect_data$major1
+v_major_category <- cramers_v_manual(
+  major_category_effect_data$sample_status,
+  major_category_effect_data$major_category
 )
 
-print(v_major)
+print(v_major_category)
 
 
-# ============================================================
-# Table A3. Summary of the Analytic Sample by Major
-# ============================================================-
+# ==============================================================
+# Table A3. Summary of the Analytic Sample by Major Combination
+# ==============================================================
 
 major_sample_table <- df %>%
   group_by(major_combo) %>%
@@ -1753,5 +1875,18 @@ major_sample_table <- df %>%
   arrange(major_combo)
 
 print(major_sample_table)
+
+print(major_sample_table, n = 26)
+
+
+
+
+
+
+
+
+
+
+
 
 
